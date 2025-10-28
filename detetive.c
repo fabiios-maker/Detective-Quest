@@ -1,0 +1,87 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+/* -------------------------
+   Estruturas de dados
+   ------------------------- */
+
+// Nó da árvore binária que representa um cômodo (Sala)
+typedef struct Sala {
+    char *nome;            // nome único do cômodo
+    char *pista;           // pista associada (string imutável definida no código) ou NULL
+    struct Sala *esquerda;
+    struct Sala *direita;
+} Sala;
+
+// Nó da BST que guarda pistas coletadas
+typedef struct PistaNode {
+    char *pista;
+    struct PistaNode *esquerda;
+    struct PistaNode *direita;
+} PistaNode;
+
+// Entrada da tabela hash: mapeia pista -> suspeito
+typedef struct HashEntry {
+    char *pista;           // chave
+    char *suspeito;        // valor
+    struct HashEntry *prox;
+} HashEntry;
+
+/* -------------------------
+   Configurações da hash
+   ------------------------- */
+#define HASH_SIZE 31
+
+/* -------------------------
+   Utilitários de string/memória
+   ------------------------- */
+
+// Copia string alocando memória (se s == NULL retorna NULL)
+char *copiarString(const char *s) {
+    if (!s) return NULL;
+    char *c = malloc(strlen(s) + 1);
+    if (!c) { fprintf(stderr, "Erro alocação string\n"); exit(1); }
+    strcpy(c, s);
+    return c;
+}
+
+// comparação case-insensitive para dois nomes (retorna 0 se iguais)
+int stricmp_local(const char *a, const char *b) {
+    if (!a || !b) return (a==b) ? 0 : 1;
+    while (*a && *b) {
+        char ca = tolower((unsigned char)*a);
+        char cb = tolower((unsigned char)*b);
+        if (ca != cb) return (ca < cb) ? -1 : 1;
+        a++; b++;
+    }
+    return (*a == *b) ? 0 : ((*a) ? 1 : -1);
+}
+
+/* -------------------------
+   Funções para Salas
+   ------------------------- */
+
+/*
+ * criarSala() – cria dinamicamente um cômodo.
+ * - nome: string com nome único do cômodo
+ * - pista: pista associada (ou NULL)
+ * Retorna ponteiro para Sala alocada.
+ */
+Sala* criarSala(const char *nome, const char *pista) {
+    Sala *s = (Sala*) malloc(sizeof(Sala));
+    if (!s) { fprintf(stderr, "Falha ao alocar Sala\n"); exit(1); }
+    s->nome = copiarString(nome);
+    s->pista = copiarString(pista); // pode ser NULL
+    s->esquerda = s->direita = NULL;
+    return s;
+}
+
+/* Libera recursivamente a árvore de salas */
+void liberarSalas(Sala *r) {
+    if (!r) return;
+    liberarSalas(r->esquerda);
+    liberarSalas(r->direita);
+    if (r->nome) free(r->nome);
+    if (r->pista) free(r->pist
